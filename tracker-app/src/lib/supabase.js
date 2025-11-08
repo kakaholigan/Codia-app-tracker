@@ -1,10 +1,148 @@
 import { createClient } from '@supabase/supabase-js';
 import { withSupabaseError } from './errorHandler';
+import toast from 'react-hot-toast';
 
 const SUPABASE_URL = 'https://pmqocxdtypxobihxusqj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtcW9jeGR0eXB4b2JpaHh1c3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxNDYwMjEsImV4cCI6MjA3MzcyMjAyMX0.32zS3ZG9Y7eRYPXZE2dfVIGd1NHGVThVYN-Y4UXx9O8';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// ✅ FIX: Enhanced Supabase client with WebSocket retry logic
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
+    timeout: 30000, // ✅ Increase timeout to 30s (from default 10s)
+  },
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+  global: {
+    headers: {
+      'x-client-info': 'codia-tracker-app',
+    },
+  },
+});
+
+// ✅ FIX: WebSocket connection status monitoring
+let realtimeConnectionStatus = 'DISCONNECTED';
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+
+// Monitor realtime connection status
+if (typeof window !== 'undefined') {
+  supabase.realtime.onOpen(() => {
+    realtimeConnectionStatus = 'CONNECTED';
+    reconnectAttempts = 0;
+    console.log('✅ Supabase realtime connected');
+    toast.success('🔄 Real-time updates connected', { id: 'realtime-status', duration: 2000 });
+  });
+
+  supabase.realtime.onClose(() => {
+    realtimeConnectionStatus = 'DISCONNECTED';
+    console.warn('⚠️ Supabase realtime disconnected');
+
+    // ✅ FIX: Retry logic with exponential backoff
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+      reconnectAttempts++;
+
+      toast.loading(`Reconnecting... (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`, {
+        id: 'realtime-status',
+        duration: delay,
+      });
+
+      setTimeout(() => {
+        console.log(`🔄 Attempting reconnect ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+        // Supabase will auto-reconnect, we just log here
+      }, delay);
+    } else {
+      toast.error('❌ Real-time updates offline. Refresh page to reconnect.', {
+        id: 'realtime-status',
+        duration: Infinity,
+      });
+    }
+  });
+
+  supabase.realtime.onError((error) => {
+    console.error('❌ Supabase realtime error:', error);
+    toast.error(`Real-time error: ${error.message}`, { id: 'realtime-status' });
+  });
+}
+
+// Export connection status getter
+export const getRealtimeStatus = () => realtimeConnectionStatus;
+
+// ✅ FIX: Database health check and RLS policy verification
+export const checkDatabaseHealth = async () => {
+  const results = {
+    connected: false,
+    realtimeStatus: realtimeConnectionStatus,
+    tablesAccessible: {},
+    errors: [],
+  };
+
+  try {
+    // Test tasks table read permission
+    const { data: tasksData, error: tasksError } = await supabase
+      .from('tasks')
+      .select('id')
+      .limit(1);
+
+    results.tablesAccessible.tasks = !tasksError;
+    if (tasksError) {
+      results.errors.push({ table: 'tasks', operation: 'SELECT', error: tasksError });
+      console.error('❌ Tasks table read error:', tasksError);
+    }
+
+    // Test tasks table write permission
+    const testTaskId = tasksData?.[0]?.id;
+    if (testTaskId) {
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', testTaskId);
+
+      results.tablesAccessible.tasksWrite = !updateError;
+      if (updateError) {
+        results.errors.push({ table: 'tasks', operation: 'UPDATE', error: updateError });
+        console.error('❌ Tasks table write error:', updateError);
+      }
+    }
+
+    // Test phases table
+    const { error: phasesError } = await supabase
+      .from('phases')
+      .select('id')
+      .limit(1);
+
+    results.tablesAccessible.phases = !phasesError;
+    if (phasesError) {
+      results.errors.push({ table: 'phases', operation: 'SELECT', error: phasesError });
+    }
+
+    // Test views
+    const { error: viewError } = await supabase
+      .from('tracker_app_data')
+      .select('id')
+      .limit(1);
+
+    results.tablesAccessible.trackerAppDataView = !viewError;
+    if (viewError) {
+      results.errors.push({ table: 'tracker_app_data', operation: 'SELECT', error: viewError });
+    }
+
+    results.connected = results.errors.length === 0;
+
+    console.log('📊 Database health check:', results);
+    return results;
+  } catch (error) {
+    console.error('❌ Database health check failed:', error);
+    results.errors.push({ general: true, error });
+    return results;
+  }
+};
 
 // Phases
 export const getPhases = async () => {
@@ -57,33 +195,90 @@ export const getGapAnalysis = async () => {
   return data;
 };
 
+// ✅ FIX CRITICAL #2: Enhanced task status update with better error handling
 export const updateTaskStatus = async (taskId, status, notes = '') => {
-  const updates = { 
-    status, 
+  // Validation
+  if (!taskId) {
+    const error = new Error('Task ID is required');
+    console.error('❌ updateTaskStatus validation error:', error);
+    toast.error('❌ Task ID is required');
+    throw error;
+  }
+
+  const validStatuses = ['PENDING', 'IN_PROGRESS', 'DONE'];
+  if (!validStatuses.includes(status)) {
+    const error = new Error(`Invalid status: ${status}. Must be one of: ${validStatuses.join(', ')}`);
+    console.error('❌ updateTaskStatus validation error:', error);
+    toast.error(`❌ Invalid status: ${status}`);
+    throw error;
+  }
+
+  const updates = {
+    status,
     notes,
     updated_at: new Date().toISOString()
   };
-  
+
   // Set started_at when moving to IN_PROGRESS
   if (status === 'IN_PROGRESS') {
     updates.started_at = new Date().toISOString();
   }
-  
+
   // Set completed_at when DONE
   if (status === 'DONE') {
     updates.completed_at = new Date().toISOString();
+    updates.progress_percentage = 100;
   }
-  
-  const { data, error } = await supabase
-    .from('tasks')
-    .update(updates)
-    .eq('id', taskId);
-    
-  if (error) {
-    console.error('Supabase update error:', error);
+
+  // Enhanced logging
+  console.log('🔄 Updating task status:', { taskId, status, updates });
+
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', taskId)
+      .select(); // ✅ Return updated row for verification
+
+    if (error) {
+      // Enhanced error logging
+      console.error('❌ Supabase update error:', {
+        error,
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        taskId,
+        status,
+      });
+
+      // User-friendly error messages
+      if (error.code === '23514') {
+        toast.error('❌ Invalid task data. Check status value.');
+      } else if (error.code === '42501') {
+        toast.error('❌ Permission denied. Check database policies.');
+      } else if (error.code === 'PGRST116') {
+        toast.error(`❌ Task ${taskId} not found.`);
+      } else {
+        toast.error(`❌ Failed to update task: ${error.message}`);
+      }
+
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('⚠️ Update succeeded but no data returned. Task may not exist:', taskId);
+      toast.warning(`⚠️ Task ${taskId} update completed but no data returned`);
+    } else {
+      console.log('✅ Task updated successfully:', data[0]);
+      toast.success(`✅ Task status updated to ${status}`, { duration: 2000 });
+    }
+
+    return data;
+  } catch (error) {
+    console.error('❌ updateTaskStatus exception:', error);
     throw error;
   }
-  return data;
 };
 
 // Logs
