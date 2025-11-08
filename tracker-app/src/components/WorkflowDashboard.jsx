@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Play, CheckCircle, Clock, AlertCircle, User, Bot, Search, Filter, X } from 'lucide-react';
 import { TaskDetailModal } from './TaskDetailModal';
@@ -16,20 +16,32 @@ export const WorkflowDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [phases, setPhases] = useState([]);
 
+  // ✅ FIXED: Use ref to avoid recreating subscription on selectedTask change
+  const selectedTaskRef = useRef(null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    selectedTaskRef.current = selectedTask;
+  }, [selectedTask]);
+
   useEffect(() => {
     loadTasks();
     loadPhases();
+
+    // ✅ FIXED: Removed selectedTask from dependencies - prevents memory leak
     const channel = supabase
       .channel('tasks_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, (payload) => {
         loadTasks();
-        if (selectedTask && payload.new && payload.new.id === selectedTask.id) {
+        // Use ref instead of state to avoid stale closure
+        if (selectedTaskRef.current && payload.new && payload.new.id === selectedTaskRef.current.id) {
           setSelectedTask(payload.new);
         }
       })
       .subscribe();
+
     return () => supabase.removeChannel(channel);
-  }, [selectedTask]);
+  }, []); // ✅ Empty dependencies - subscription created only once
 
   const loadPhases = async () => {
     try {

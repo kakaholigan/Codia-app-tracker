@@ -2,15 +2,21 @@ import React, { useState } from 'react';
 import { X, User, Bot, Clock, TrendingUp, ArrowRight, Shield, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { validateStatusChange, validateTaskUpdate } from '../lib/validation';
 
 export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
   const [updating, setUpdating] = useState(false);
 
   if (!task) return null;
 
-  // ✅ FIXED: Use toast instead of alert for better UX
+  // ✅ FIXED: Use toast instead of alert + added validation
   const handleStatusChange = async (newStatus) => {
     if (updating) return;
+
+    // ✅ Validate business rules before updating
+    if (!validateStatusChange(task, newStatus)) {
+      return; // Validation failed, error toast already shown
+    }
 
     setUpdating(true);
 
@@ -28,6 +34,13 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
       }
       if (newStatus === 'DONE' && !task.completed_at) {
         updates.completed_at = new Date().toISOString();
+        updates.progress_percentage = 100;
+      }
+
+      // ✅ Validate updates before sending to DB
+      if (!validateTaskUpdate(updates)) {
+        toast.dismiss(loadingToast);
+        return;
       }
 
       const { error } = await supabase
