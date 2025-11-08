@@ -70,10 +70,10 @@ export const WorkflowDashboard = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'DONE': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'IN_PROGRESS': return <Play className="w-5 h-5 text-blue-500" />;
-      case 'PENDING': return <Clock className="w-5 h-5 text-gray-400" />;
-      default: return <AlertCircle className="w-5 h-5 text-orange-500" />;
+      case 'DONE': return <CheckCircle className="w-5 h-5 text-success-500" />;
+      case 'IN_PROGRESS': return <Play className="w-5 h-5 text-info-500" />;
+      case 'PENDING': return <Clock className="w-5 h-5 text-status-pending-bg" />;
+      default: return <AlertCircle className="w-5 h-5 text-warning-500" />;
     }
   };
 
@@ -85,24 +85,24 @@ export const WorkflowDashboard = () => {
       }}
       className={`p-4 rounded-lg border-2 cursor-pointer transition ${
         selectedTask?.id === task.id
-          ? 'border-blue-500 bg-blue-50'
+          ? 'border-brand-primary bg-info-50'
           : task.execution_status === 'BLOCKED'
-          ? 'border-red-200 bg-red-50 opacity-70'
-          : 'border-gray-200 hover:border-blue-300 bg-white'
+          ? 'border-error-200 bg-error-50 opacity-70'
+          : 'border-border-default hover:border-info-500 bg-white'
       }`}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           {getStatusIcon(task.status)}
-          {type === 'human' ? <User className="w-4 h-4 text-purple-500" /> : <Bot className="w-4 h-4 text-green-500" />}
+          {type === 'human' ? <User className="w-4 h-4 text-info-600" /> : <Bot className="w-4 h-4 text-success-600" />}
           <span className="text-xs font-bold text-gray-500">#{task.id}</span>
         </div>
         <div className="flex gap-1">
-          {task.execution_status === 'BLOCKED' && <span className="px-2 py-1 text-xs font-bold rounded bg-red-100 text-red-700">🔒 BLOCKED</span>}
+          {task.execution_status === 'BLOCKED' && <span className="px-2 py-1 text-xs font-bold rounded bg-status-blocked-badgeBg text-status-blocked-badgeText">🔒 BLOCKED</span>}
           <span className={`px-2 py-1 text-xs font-bold rounded ${
-            task.status === 'DONE' ? 'bg-green-100 text-green-700' :
-            task.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-            'bg-gray-100 text-gray-600'
+            task.status === 'DONE' ? 'bg-status-done-badgeBg text-status-done-badgeText' :
+            task.status === 'IN_PROGRESS' ? 'bg-status-inProgress-badgeBg text-status-inProgress-badgeText' :
+            'bg-status-pending-badgeBg text-status-pending-badgeText'
           }`}>{task.status}</span>
         </div>
       </div>
@@ -117,7 +117,7 @@ export const WorkflowDashboard = () => {
           </span>
         )}
         {task.blocking_dependencies && task.blocking_dependencies.length > 0 && (
-          <span className="flex items-center gap-1 text-orange-600">
+          <span className="flex items-center gap-1 text-warning-600">
             <AlertCircle className="w-3 h-3" />
             <span className="font-semibold">Blocks {task.blocking_dependencies.length} tasks</span>
           </span>
@@ -125,12 +125,12 @@ export const WorkflowDashboard = () => {
       </div>
       
       {task.status === 'IN_PROGRESS' && task.current_step && (
-        <div className="bg-blue-50 border-l-4 border-blue-500 px-3 py-2 mb-2">
-          <p className="text-xs text-blue-700 font-semibold">⚡ {task.current_step}</p>
+        <div className="bg-status-inProgress-light border-l-4 border-status-inProgress-border px-3 py-2 mb-2">
+          <p className="text-xs text-status-inProgress-badgeText font-semibold">⚡ {task.current_step}</p>
           {task.progress_percentage !== null && (
             <div className="mt-1">
-              <div className="w-full bg-blue-200 rounded-full h-1">
-                <div className="bg-blue-600 h-1 rounded-full transition-all" style={{ width: `${task.progress_percentage}%` }} />
+              <div className="w-full bg-info-200 rounded-full h-1">
+                <div className="bg-info-600 h-1 rounded-full transition-all" style={{ width: `${task.progress_percentage}%` }} />
               </div>
             </div>
           )}
@@ -159,7 +159,7 @@ export const WorkflowDashboard = () => {
                   console.error('Error starting task:', error);
                 }
               }}
-              className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition font-semibold"
+              className="px-2 py-1 bg-info-500 text-white rounded hover:bg-info-600 transition font-semibold"
               title="Start this task"
             >
               ▶️ Start
@@ -172,8 +172,8 @@ export const WorkflowDashboard = () => {
                 try {
                   await supabase
                     .from('tasks')
-                    .update({ 
-                      status: 'DONE', 
+                    .update({
+                      status: 'DONE',
                       completed_at: new Date().toISOString(),
                       progress_percentage: 100
                     })
@@ -183,7 +183,7 @@ export const WorkflowDashboard = () => {
                   console.error('Error completing task:', error);
                 }
               }}
-              className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition font-semibold"
+              className="px-2 py-1 bg-success-500 text-white rounded hover:bg-success-600 transition font-semibold"
               title="Mark as done"
             >
               ✅ Done
@@ -246,25 +246,25 @@ export const WorkflowDashboard = () => {
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-4 mb-4"><h1 className="text-3xl font-bold">🔄 Workflow Dashboard</h1></div>
       <div className="flex gap-4 mb-4 flex-wrap">
-        <button onClick={() => setActiveView('human')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${activeView === 'human' ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}><User className="w-5 h-5" />👤 Human Tasks ({humanTasks.length})</button>
-        <button onClick={() => setActiveView('ai')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${activeView === 'ai' ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}><Bot className="w-5 h-5" />🤖 AI Agent Tasks ({aiTasks.length})</button>
-        
+        <button onClick={() => setActiveView('human')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${activeView === 'human' ? 'bg-info-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}><User className="w-5 h-5" />👤 Human Tasks ({humanTasks.length})</button>
+        <button onClick={() => setActiveView('ai')} className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${activeView === 'ai' ? 'bg-success-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}><Bot className="w-5 h-5" />🤖 AI Agent Tasks ({aiTasks.length})</button>
+
         {/* Quick Filter: Ready to Start */}
-        <button 
+        <button
           onClick={() => {
             setFilterStatus('PENDING');
             setSearchQuery('');
             setFilterPhase('all');
             setFilterPriority('all');
           }}
-          className="flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition bg-blue-100 text-blue-700 hover:bg-blue-200 border-2 border-blue-300"
+          className="flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition bg-info-100 text-info-900 hover:bg-info-200 border-2 border-info-500"
           title="Show only tasks ready to start (not blocked)"
         >
           <Play className="w-4 h-4" />
           🚀 Ready to Start
         </button>
-        
-        <div className="ml-auto bg-white px-4 py-3 rounded-lg border-2 border-green-200"><div className="text-2xl font-bold text-green-600">{currentTasks.length > 0 ? Math.round((currentTasks.filter(t => t.status === 'DONE').length / currentTasks.length) * 100) : 0}%</div><div className="text-xs text-gray-600">Complete</div></div>
+
+        <div className="ml-auto bg-white px-4 py-3 rounded-lg border-2 border-success-200"><div className="text-2xl font-bold text-success-600">{currentTasks.length > 0 ? Math.round((currentTasks.filter(t => t.status === 'DONE').length / currentTasks.length) * 100) : 0}%</div><div className="text-xs text-gray-600">Complete</div></div>
       </div>
       
       {/* Search and Filters */}

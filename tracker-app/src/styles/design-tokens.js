@@ -20,26 +20,128 @@ export const colors = {
     primaryLight: '#DBEAFE', // Light blue for backgrounds/tags
   },
   
-  // Semantic Colors
+  // Semantic Colors (Extended scales for UI components)
   success: {
-    default: '#22C55E',      // Green
-    background: '#F0FDF4',
-    text: '#166534',
+    50: '#F0FDF4',           // Lightest background
+    100: '#DCFCE7',          // Light background
+    200: '#BBF7D0',          // Badge background
+    500: '#22C55E',          // Default/buttons
+    600: '#16A34A',          // Hover state
+    700: '#15803D',          // Active/pressed
+    900: '#166534',          // Dark text
+    default: '#22C55E',      // Alias
+    background: '#F0FDF4',   // Alias
+    text: '#166534',         // Alias
   },
   warning: {
-    default: '#F59E0B',      // Amber
-    background: '#FFFBEB',
-    text: '#B45309',
+    50: '#FFFBEB',           // Lightest background
+    100: '#FEF3C7',          // Light background
+    200: '#FDE68A',          // Badge background
+    500: '#F59E0B',          // Default/buttons
+    600: '#D97706',          // Hover state
+    700: '#B45309',          // Active/pressed
+    900: '#78350F',          // Dark text
+    default: '#F59E0B',      // Alias
+    background: '#FFFBEB',   // Alias
+    text: '#B45309',         // Alias
   },
   error: {
-    default: '#EF4444',       // Red
-    background: '#FEF2F2',
-    text: '#991B1B',
+    50: '#FEF2F2',           // Lightest background
+    100: '#FEE2E2',          // Light background
+    200: '#FECACA',          // Badge background
+    500: '#EF4444',          // Default/buttons
+    600: '#DC2626',          // Hover state
+    700: '#B91C1C',          // Active/pressed
+    900: '#991B1B',          // Dark text
+    default: '#EF4444',      // Alias
+    background: '#FEF2F2',   // Alias
+    text: '#991B1B',         // Alias
   },
   info: {
-    default: '#3B82F6',       // Blue
-    background: '#EFF6FF',
-    text: '#1E40AF',
+    50: '#EFF6FF',           // Lightest background
+    100: '#DBEAFE',          // Light background
+    200: '#BFDBFE',          // Badge background
+    500: '#3B82F6',          // Default/buttons
+    600: '#2563EB',          // Hover state
+    700: '#1D4ED8',          // Active/pressed
+    900: '#1E40AF',          // Dark text
+    default: '#3B82F6',      // Alias
+    background: '#EFF6FF',   // Alias
+    text: '#1E40AF',         // Alias
+  },
+
+  // Priority Colors
+  priority: {
+    high: {
+      bg: '#DC2626',         // Red 600
+      text: '#FFFFFF',       // White text
+      badgeBg: '#FEE2E2',    // Red 100
+      badgeText: '#991B1B',  // Red 900
+    },
+    medium: {
+      bg: '#F59E0B',         // Amber 500
+      text: '#FFFFFF',       // White text
+      badgeBg: '#FEF3C7',    // Amber 100
+      badgeText: '#78350F',  // Amber 900
+    },
+    low: {
+      bg: '#9CA3AF',         // Gray 400
+      text: '#FFFFFF',       // White text
+      badgeBg: '#F3F4F6',    // Gray 100
+      badgeText: '#374151',  // Gray 700
+    },
+  },
+
+  // Status Colors
+  status: {
+    pending: {
+      bg: '#9CA3AF',         // Gray 400
+      text: '#111827',       // Gray 900
+      badgeBg: '#F3F4F6',    // Gray 100
+      badgeText: '#374151',  // Gray 700
+      light: '#F9FAFB',      // Gray 50
+    },
+    inProgress: {
+      bg: '#3B82F6',         // Blue 500
+      text: '#1E3A8A',       // Blue 900
+      badgeBg: '#DBEAFE',    // Blue 100
+      badgeText: '#1E40AF',  // Blue 900
+      light: '#EFF6FF',      // Blue 50
+      border: '#60A5FA',     // Blue 400
+    },
+    done: {
+      bg: '#22C55E',         // Green 500
+      text: '#14532D',       // Green 900
+      badgeBg: '#DCFCE7',    // Green 100
+      badgeText: '#166534',  // Green 900
+      light: '#F0FDF4',      // Green 50
+      border: '#4ADE80',     // Green 400
+    },
+    blocked: {
+      bg: '#EF4444',         // Red 500
+      text: '#7F1D1D',       // Red 900
+      badgeBg: '#FEE2E2',    // Red 100
+      badgeText: '#991B1B',  // Red 900
+      light: '#FEF2F2',      // Red 50
+      border: '#F87171',     // Red 400
+    },
+  },
+
+  // AI & Milestone Colors
+  ai: {
+    primary: '#A855F7',      // Purple 500
+    light: '#F3E8FF',        // Purple 50
+    bg: '#E9D5FF',           // Purple 100
+    text: '#6B21A8',         // Purple 800
+    border: '#C084FC',       // Purple 400
+  },
+  milestone: {
+    primary: '#F59E0B',      // Amber 500
+    light: '#FFFBEB',        // Amber 50
+    bg: '#FEF3C7',           // Amber 100
+    text: '#78350F',         // Amber 900
+    border: '#FBBF24',       // Amber 400
+    accent: '#FB923C',       // Orange 400
   },
   
   // UI Elements

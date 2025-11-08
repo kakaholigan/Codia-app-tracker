@@ -75,9 +75,9 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
   // BLOCKED is execution_status (calculated), not a task status
   const getStatusOptions = () => {
     return [
-      { value: 'PENDING', label: '⏸️ Pending', color: 'bg-gray-500' },
-      { value: 'IN_PROGRESS', label: '⏳ In Progress', color: 'bg-blue-500' },
-      { value: 'DONE', label: '✅ Done', color: 'bg-green-500' }
+      { value: 'PENDING', label: '⏸️ Pending', color: 'bg-status-pending-bg' },
+      { value: 'IN_PROGRESS', label: '⏳ In Progress', color: 'bg-status-inProgress-bg' },
+      { value: 'DONE', label: '✅ Done', color: 'bg-status-done-bg' }
     ];
   };
 
@@ -93,7 +93,7 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`p-6 ${task.is_milestone ? 'bg-gradient-to-r from-yellow-50 to-orange-50' : 'bg-gradient-to-r from-blue-50 to-purple-50'} border-b-4 ${task.is_milestone ? 'border-yellow-400' : 'border-blue-400'}`}>
+        <div className={`p-6 ${task.is_milestone ? 'bg-gradient-to-r from-milestone-light to-milestone-bg' : 'bg-gradient-to-r from-info-50 to-ai-light'} border-b-4 ${task.is_milestone ? 'border-milestone-border' : 'border-info-500'}`}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-grow">
               {/* Title Row */}
@@ -106,10 +106,10 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Current Status */}
                 <span className={`px-4 py-2 rounded-full text-sm font-bold shadow-md ${
-                  task.status === 'DONE' ? 'bg-green-200 text-green-900' :
-                  task.status === 'IN_PROGRESS' ? 'bg-blue-200 text-blue-900' :
-                  task.status === 'BLOCKED' ? 'bg-red-200 text-red-900' :
-                  'bg-gray-200 text-gray-900'
+                  task.status === 'DONE' ? 'bg-status-done-badgeBg text-status-done-badgeText' :
+                  task.status === 'IN_PROGRESS' ? 'bg-status-inProgress-badgeBg text-status-inProgress-badgeText' :
+                  task.status === 'BLOCKED' ? 'bg-status-blocked-badgeBg text-status-blocked-badgeText' :
+                  'bg-status-pending-badgeBg text-status-pending-badgeText'
                 }`}>
                   {task.status}
                 </span>
@@ -118,9 +118,9 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
                 {/* ✅ FIXED: Removed 'CRITICAL' check - schema only has HIGH/MEDIUM/LOW */}
                 {task.priority && (
                   <span className={`px-3 py-2 rounded-full text-sm font-bold shadow-md ${
-                    task.priority === 'HIGH' ? 'bg-red-600 text-white' :
-                    task.priority === 'MEDIUM' ? 'bg-orange-500 text-white' :
-                    'bg-gray-400 text-white'
+                    task.priority === 'HIGH' ? 'bg-priority-high-bg text-priority-high-text' :
+                    task.priority === 'MEDIUM' ? 'bg-priority-medium-bg text-priority-medium-text' :
+                    'bg-priority-low-bg text-priority-low-text'
                   }`}>
                     {task.priority}
                   </span>
@@ -130,19 +130,19 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
                 <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-full shadow-md">
                   {task.assigned_type === 'HUMAN' ? (
                     <>
-                      <User className="w-5 h-5 text-blue-600" />
-                      <span className="font-bold text-blue-900">{task.assigned_to || 'Unassigned'}</span>
+                      <User className="w-5 h-5 text-info-600" />
+                      <span className="font-bold text-info-900">{task.assigned_to || 'Unassigned'}</span>
                     </>
                   ) : (
                     <>
-                      <Bot className="w-5 h-5 text-purple-600" />
-                      <span className="font-bold text-purple-900">{task.assigned_to || 'AI Agent'}</span>
+                      <Bot className="w-5 h-5 text-ai-primary" />
+                      <span className="font-bold text-ai-text">{task.assigned_to || 'AI Agent'}</span>
                     </>
                   )}
                 </div>
 
                 {/* Phase */}
-                <span className="px-3 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-bold shadow-md">
+                <span className="px-3 py-2 bg-info-100 text-info-900 rounded-full text-sm font-bold shadow-md">
                   Phase {task.phase_id}
                 </span>
               </div>
@@ -187,7 +187,7 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
         <div className="p-6 space-y-6">
           {/* Milestone Description */}
           {task.is_milestone && task.milestone_description && (
-            <div className="p-4 bg-yellow-100 border-l-4 border-yellow-500 rounded-lg shadow">
+            <div className="p-4 bg-milestone-bg border-l-4 border-milestone-border rounded-lg shadow">
               <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
                 🎯 Milestone Goal
               </h4>
@@ -210,20 +210,20 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
             {/* Time Estimates */}
             {task.estimated_hours && (
               <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-blue-600" />
+                <Clock className="w-5 h-5 text-info-600" />
                 <div>
                   <div className="text-xs text-gray-600">Estimated</div>
                   <div className="font-bold text-lg">{task.estimated_hours}h</div>
                 </div>
               </div>
             )}
-            
+
             {task.actual_hours && (
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-green-600" />
+                <TrendingUp className="w-5 h-5 text-success-600" />
                 <div>
                   <div className="text-xs text-gray-600">Actual</div>
-                  <div className="font-bold text-lg text-green-700">{task.actual_hours}h</div>
+                  <div className="font-bold text-lg text-success-700">{task.actual_hours}h</div>
                 </div>
               </div>
             )}
@@ -231,7 +231,7 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
             {/* Dates */}
             {task.started_at && (
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-blue-600" />
+                <Calendar className="w-5 h-5 text-info-600" />
                 <div>
                   <div className="text-xs text-gray-600">Started</div>
                   <div className="font-semibold text-sm">{new Date(task.started_at).toLocaleDateString()}</div>
@@ -241,7 +241,7 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
 
             {task.completed_at && (
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-success-600" />
                 <div>
                   <div className="text-xs text-gray-600">Completed</div>
                   <div className="font-semibold text-sm">{new Date(task.completed_at).toLocaleDateString()}</div>
@@ -263,22 +263,22 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
 
           {/* Dependencies */}
           {task.depends_on_names && task.depends_on_names.length > 0 && (
-            <div className="p-4 bg-orange-50 border-l-4 border-orange-400 rounded-lg">
+            <div className="p-4 bg-warning-50 border-l-4 border-warning-500 rounded-lg">
               <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
-                <ArrowRight className="w-5 h-5 text-orange-600" />
+                <ArrowRight className="w-5 h-5 text-warning-600" />
                 ⚠️ Dependencies ({task.depends_on_names.length})
               </h4>
               <div className="flex flex-wrap gap-2">
                 {task.depends_on_names.map((dep, idx) => (
-                  <span 
-                    key={idx} 
-                    className="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-sm font-semibold shadow"
+                  <span
+                    key={idx}
+                    className="bg-warning-100 text-warning-900 px-3 py-2 rounded-lg text-sm font-semibold shadow"
                   >
                     {dep}
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-orange-700 mt-2">
+              <p className="text-xs text-warning-700 mt-2">
                 💡 These tasks must be completed first
               </p>
             </div>
@@ -286,12 +286,12 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
 
           {/* Blocker Warning */}
           {task.blocking_count > 0 && (
-            <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg shadow">
-              <h4 className="font-bold text-red-900 mb-2 flex items-center gap-2">
+            <div className="p-4 bg-error-50 border-l-4 border-error-500 rounded-lg shadow">
+              <h4 className="font-bold text-error-900 mb-2 flex items-center gap-2">
                 <Shield className="w-5 h-5" />
                 🚫 Blocking {task.blocking_count} Task(s)
               </h4>
-              <p className="text-sm text-red-700">
+              <p className="text-sm text-error-text">
                 Other tasks are waiting for this to complete. Prioritize this task!
               </p>
             </div>
@@ -299,8 +299,8 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
 
           {/* Parent Task */}
           {task.parent_name && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-sm text-blue-700">
+            <div className="p-3 bg-info-50 border border-info-200 rounded-lg">
+              <div className="text-sm text-info-text">
                 <span className="font-semibold">↳ Part of:</span> {task.parent_name}
               </div>
             </div>
@@ -320,7 +320,7 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
 
           {/* Tech Details */}
           {(task.ram_usage || task.port) && (
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="p-4 bg-ai-light border border-ai-border rounded-lg">
               <h4 className="font-bold text-lg mb-2">🔧 Technical Details</h4>
               <div className="space-y-1 text-sm">
                 {task.ram_usage && (
@@ -342,7 +342,7 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
           </div>
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
+            className="px-6 py-3 bg-brand-primary text-white font-bold rounded-lg hover:bg-brand-primaryHover transition-all shadow-lg hover:shadow-xl"
           >
             Close
           </button>
