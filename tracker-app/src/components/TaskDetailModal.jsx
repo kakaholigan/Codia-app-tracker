@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
 import { X, User, Bot, Clock, TrendingUp, ArrowRight, Shield, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
 
 export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
   const [updating, setUpdating] = useState(false);
 
   if (!task) return null;
 
+  // ✅ FIXED: Use toast instead of alert for better UX
   const handleStatusChange = async (newStatus) => {
     if (updating) return;
-    
+
     setUpdating(true);
+
+    // Show loading toast
+    const loadingToast = toast.loading('Updating task status...');
+
     try {
       const updates = {
         status: newStatus,
@@ -31,26 +37,34 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
 
       if (error) throw error;
 
+      // Success!
+      toast.success(`✅ Task marked as ${newStatus}`, {
+        id: loadingToast,
+      });
+
       // Notify parent to refresh
       if (onUpdate) onUpdate();
-      
+
       // Update local task object
       Object.assign(task, updates);
-      
+
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('❌ Failed to update: ' + error.message);
+      toast.error(`❌ Failed to update: ${error.message}`, {
+        id: loadingToast,
+      });
     } finally {
       setUpdating(false);
     }
   };
 
+  // ✅ FIXED: Removed BLOCKED from status options
+  // BLOCKED is execution_status (calculated), not a task status
   const getStatusOptions = () => {
     return [
       { value: 'PENDING', label: '⏸️ Pending', color: 'bg-gray-500' },
       { value: 'IN_PROGRESS', label: '⏳ In Progress', color: 'bg-blue-500' },
-      { value: 'DONE', label: '✅ Done', color: 'bg-green-500' },
-      { value: 'BLOCKED', label: '🚫 Blocked', color: 'bg-red-500' }
+      { value: 'DONE', label: '✅ Done', color: 'bg-green-500' }
     ];
   };
 
@@ -60,8 +74,9 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
         className="fixed inset-0 bg-black bg-opacity-30 z-40"
         onClick={onClose}
       />
-      <div 
-        className="fixed right-0 top-0 h-full w-[600px] bg-white shadow-2xl z-50 overflow-y-auto animate-slideInRight"
+      {/* ✅ FIXED: Mobile responsive - w-full on mobile, w-[600px] on md+ screens */}
+      <div
+        className="fixed right-0 top-0 h-full w-full md:w-[600px] bg-white shadow-2xl z-50 overflow-y-auto animate-slideInRight"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -87,10 +102,11 @@ export const TaskDetailModal = ({ task, onClose, onUpdate }) => {
                 </span>
 
                 {/* Priority */}
+                {/* ✅ FIXED: Removed 'CRITICAL' check - schema only has HIGH/MEDIUM/LOW */}
                 {task.priority && (
                   <span className={`px-3 py-2 rounded-full text-sm font-bold shadow-md ${
-                    task.priority === 'CRITICAL' ? 'bg-red-600 text-white' :
-                    task.priority === 'HIGH' ? 'bg-orange-500 text-white' :
+                    task.priority === 'HIGH' ? 'bg-red-600 text-white' :
+                    task.priority === 'MEDIUM' ? 'bg-orange-500 text-white' :
                     'bg-gray-400 text-white'
                   }`}>
                     {task.priority}

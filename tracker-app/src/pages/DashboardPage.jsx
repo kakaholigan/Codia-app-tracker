@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { TrendingUp, Clock, CheckCircle, AlertCircle, User, Bot, Target, Zap } from 'lucide-react';
 import { AIActivityStream } from '../components/AIActivityStream';
 import { AIAnalysisPanel } from '../components/AIAnalysisPanel';
+import toast from 'react-hot-toast';
 
 export const DashboardPage = ({ onNavigate }) => {
   const [stats, setStats] = useState(null);
@@ -26,7 +27,10 @@ export const DashboardPage = ({ onNavigate }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // ✅ FIXED: Use toast instead of alert
   const handleRecommendationApply = async (recommendation) => {
+    const loadingToast = toast.loading('Applying AI recommendation...');
+
     try {
       // Save recommendation to DB
       const { error: recError } = await supabase
@@ -43,9 +47,9 @@ export const DashboardPage = ({ onNavigate }) => {
           applied_at: new Date().toISOString(),
           applied_by: 'FOUNDER'
         }]);
-      
+
       if (recError) throw recError;
-      
+
       // Execute recommendation action
       if (recommendation.type === 'CRITICAL_PATH' && recommendation.tasks) {
         // Start critical path tasks
@@ -56,18 +60,26 @@ export const DashboardPage = ({ onNavigate }) => {
             .eq('id', task.id)
             .eq('status', 'PENDING');
         }
-        alert(`✅ Started ${recommendation.tasks.slice(0, 3).length} critical path tasks!`);
+        toast.success(`✅ Started ${recommendation.tasks.slice(0, 3).length} critical path tasks!`, {
+          id: loadingToast,
+        });
       } else if (recommendation.type === 'UNBLOCK' && recommendation.tasks) {
         // Highlight blocking tasks
-        alert(`⚠️ Focus on completing these ${recommendation.tasks.length} tasks to unblock others!`);
+        toast.success(`⚠️ Focus on completing these ${recommendation.tasks.length} tasks to unblock others!`, {
+          id: loadingToast,
+        });
       } else {
-        alert(`✅ Recommendation applied: ${recommendation.message}`);
+        toast.success(`✅ Recommendation applied: ${recommendation.message}`, {
+          id: loadingToast,
+        });
       }
-      
+
       loadDashboardData(); // Refresh
     } catch (error) {
       console.error('Error applying recommendation:', error);
-      alert('❌ Failed to apply recommendation: ' + error.message);
+      toast.error(`❌ Failed to apply recommendation: ${error.message}`, {
+        id: loadingToast,
+      });
     }
   };
 
@@ -86,11 +98,12 @@ export const DashboardPage = ({ onNavigate }) => {
         .from('tasks')
         .select('status, assigned_type, estimated_hours, actual_hours, completed_at');
       
+      // ✅ FIXED: BLOCKED is execution_status not status
       const total = tasks.length;
       const done = tasks.filter(t => t.status === 'DONE').length;
       const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
       const pending = tasks.filter(t => t.status === 'PENDING').length;
-      const blocked = tasks.filter(t => t.status === 'BLOCKED').length;
+      const blocked = tasks.filter(t => t.execution_status === 'BLOCKED').length;
       
       const completionPct = ((done / total) * 100).toFixed(1);
       const humanTasks = tasks.filter(t => t.assigned_type === 'HUMAN').length;

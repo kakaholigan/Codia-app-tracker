@@ -84,6 +84,9 @@ export const KanbanView = () => {
     }
   };
 
+  // ✅ FIXED: Removed BLOCKED column
+  // BLOCKED is an execution_status (calculated from dependencies), not a task status
+  // Tasks can be PENDING/IN_PROGRESS/DONE, but show 🔒 badge when execution_status='BLOCKED'
   const columns = [
     {
       id: 'PENDING',
@@ -98,13 +101,6 @@ export const KanbanView = () => {
       icon: AlertCircle,
       headerClasses: 'bg-info-background text-info-text',
       columnClasses: 'bg-info-background/50',
-    },
-    {
-      id: 'BLOCKED',
-      name: 'Blocked',
-      icon: AlertCircle,
-      headerClasses: 'bg-error-background text-error-text',
-      columnClasses: 'bg-error-background/50',
     },
     {
       id: 'DONE',
@@ -222,14 +218,33 @@ export const KanbanView = () => {
                       e.dataTransfer.effectAllowed = 'move';
                       e.dataTransfer.setData('taskId', task.id);
                       setDraggingTask(task.id);
+
+                      // ✅ FIXED: Prevent ghost element leak
                       const ghost = e.currentTarget.cloneNode(true);
+                      ghost.id = `drag-ghost-${task.id}`;
                       ghost.style.opacity = '0.8';
                       ghost.style.transform = 'rotate(5deg)';
+                      ghost.style.position = 'absolute';
+                      ghost.style.top = '-1000px';
                       document.body.appendChild(ghost);
                       e.dataTransfer.setDragImage(ghost, 0, 0);
-                      setTimeout(() => document.body.removeChild(ghost), 0);
+
+                      // Safely remove after drag image is captured
+                      requestAnimationFrame(() => {
+                        const existingGhost = document.getElementById(`drag-ghost-${task.id}`);
+                        if (existingGhost) {
+                          document.body.removeChild(existingGhost);
+                        }
+                      });
                     }}
-                    onDragEnd={() => setDraggingTask(null)}
+                    onDragEnd={() => {
+                      setDraggingTask(null);
+                      // ✅ Double-check ghost cleanup on drag end
+                      const ghost = document.getElementById(`drag-ghost-${task.id}`);
+                      if (ghost) {
+                        document.body.removeChild(ghost);
+                      }
+                    }}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
