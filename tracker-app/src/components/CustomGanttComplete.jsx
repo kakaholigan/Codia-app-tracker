@@ -5,6 +5,7 @@ import { format, addDays, differenceInDays, startOfMonth, endOfMonth, eachMonthO
 import { Calendar, RefreshCw, Undo2, Redo2, Download } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { TaskDetailModal } from './TaskDetailModal';
+import { useDebounce } from '../hooks/useDebounce';
 
 export const CustomGanttComplete = ({ selectedTask: highlightedTaskFromPage }) => {
   const [tasks, setTasks] = useState([]);
