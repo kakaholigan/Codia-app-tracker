@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { DashboardPage } from './pages/DashboardPage';
 import { TasksPage } from './pages/TasksPage';
 import { GapDashboard } from './components/GapDashboard';
+import { AIActivityStream } from './components/AIActivityStream';
 import './App.css';
 
 function App() {
@@ -16,6 +17,14 @@ function App() {
         return <TasksPage />;
       case 'analytics':
         return <GapDashboard />;
+      case 'activity':
+        return (
+          <div className="p-6">
+            <h1 className="text-3xl font-bold text-text-primary mb-2">Activity Logs</h1>
+            <p className="text-text-secondary mb-6">Real-time AI agent execution logs and task activity</p>
+            <AIActivityStream />
+          </div>
+        );
       default:
         return <DashboardPage onNavigate={setActivePage} />;
     }

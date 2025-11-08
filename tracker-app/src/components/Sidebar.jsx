@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CheckSquare, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BarChart2, Activity } from 'lucide-react';
 
 const NavItem = ({ icon: Icon, label, isActive, onClick }) => (
   <button
@@ -20,6 +20,7 @@ export const Sidebar = ({ activePage, setActivePage }) => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'analytics', label: 'Analytics', icon: BarChart2 },
+    { id: 'activity', label: 'Activity Logs', icon: Activity },
   ];
 
   return (
